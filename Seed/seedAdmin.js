@@ -29,7 +29,7 @@ const seedAdmin = async () => {
       role: "admin",
     });
 
-    console.log("✅ Admin Created Successfully");
+    console.log("Admin Created Successfully");
     console.log("Email:", admin.email);
     console.log("Password:", process.env.ADMIN_PASSWORD);
 

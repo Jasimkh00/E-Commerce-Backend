@@ -1,104 +1,21 @@
-npm install express mongoose bcryptjs jsonwebtoken dotenv
-npm install --save-dev nodemon
+This is my first E-Commerce Project .
+There are five modules used in this project .
 
+1:User Module :This module contain following API'S :
+.Register  .Login  .Get Profile  .Forget Password  .Reset Password  .Get All User   Soft Delete User   . Permanently User Delete  
 
+2:Category Module :This module cotain following API'S :
+.Create Category   .Update Category   .Soft Delete Category  .Get All Categories 
 
+3:Product Module :This module contain following API'S :
+.Create Product   .Update Product   .Soft Delete Product   .Get All Product   
+GetProduct By Slug 
 
-auth-app/
-│
-├── config/                 # Database & environment config
-│   └── db.js              # MongoDB connection
-│
-├── controllers/           # Logic for login, signup, logout, etc.
-│   └── authController.js
-│
-├── middlewares/           # Middleware functions (e.g. auth check)
-│   └── authMiddleware.js
-│
-├── models/                # Mongoose models (User schema)
-│   └── User.js
-│
-├── routes/                # Route definitions (login, signup)
-│   └── authRoutes.js
-│
-├── utils/                 # Helper functions (e.g. token, hashing)
-│   └── generateToken.js
-│
-├── .env                   # Environment variables (PORT, DB_URI, etc.)
-├── .gitignore             # Node_modules and env ignored here
-├── package.json           # Dependencies and scripts
-├── server.js              # Entry point
-└── README.md              # Project overview (optional for now)
+4:Cart Module :This module contain following API'S :
+.Add Cart    .Update Cart    .Remove Cart    .Get Cart  
 
-
-
-
-
-
-
-
-################# Files Names ################
-
-| 📁 File / Folder                | 🔍 Purpose                                    |
-| ------------------------------- | --------------------------------------------- |
-| `config/db.js`                  | MongoDB URI se connect hota hai               |
-| `controllers/authController.js` | Signup/login logic yahan likha hota hai       |
-| `middlewares/authMiddleware.js` | JWT verify karne ka kaam karega               |
-| `models/User.js`                | User schema (name, email, password, etc.)     |
-| `routes/authRoutes.js`          | Routes like `/login`, `/register`             |
-| `utils/generateToken.js`        | JWT token create karne wala helper            |
-| `.env`                          | PORT, DB\_URI, JWT\_SECRET store              |
-| `server.js`                     | App initialize, middlewares, routes use karna |
-
-SPECIAL CODE FOR EMAIL IN USERS MODEL SCHEMA:
-
- /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
- 
---------------------------------------------------------
----------------------------------------------------------------------
-
-
-
-
-
-⚡ Summary Flow (Sabse Pehle → Last):
-
-Project Setup & Packages Install
-
-.env Setup
-
-DB Connection
-
-User Model
-
-Utility Functions
-
-Controllers
-
-Middleware
-
-Routes
-
-Server Start
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+5:Order Module :This module contain following API'S :
+.Place Order   .Get My Order   .Order Cancel   .Get All Orders  .Status Update 
 
 
 
