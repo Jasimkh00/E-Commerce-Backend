@@ -4,6 +4,7 @@ const authController = require("../Controllers/authController");
 const { protect } = require("../Middlewares/authMiddleware");
 const {adminOnly} = require("../Middlewares/adminMiddleware");
 
+
 // For Public :
 router.post("/register", authController.register);
 router.post("/login", authController.login);

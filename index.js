@@ -17,6 +17,9 @@ const app = express();
 // Middleware For Json (Used To Convert Json String Into Js Object) :
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.send("API Working Successfully");
+});
 // Import Routes :
 const userRoutes = require('./Routes/userRoutes');
 const categoryRoutes = require('./Routes/categoryRoutes');
