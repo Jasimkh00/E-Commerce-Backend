@@ -68,7 +68,7 @@ const productSchema = new mongoose.Schema(
 );
 
 
-// ✅ PRE SAVE HOOK (NO NEXT ISSUE)
+//  PRE SAVE HOOK (NO NEXT ISSUE)
 productSchema.pre("save", function () {
 
   if (this.isModified("title")) {
