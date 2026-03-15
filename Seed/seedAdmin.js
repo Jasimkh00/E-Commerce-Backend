@@ -1,9 +1,14 @@
-require("dotenv").config();
+// Require :
+const dotenv = require("dotenv");
+dotenv.config();
 const bcrypt = require("bcryptjs");
-const connectDB = require("../config/db");
+const connectDB = require("../Config/db");
 const User = require("../Models/userModel");
 
+// Function For Admin Register :
 const seedAdmin = async () => {
+
+  // Using Try-Catch :
   try {
     await connectDB();
 

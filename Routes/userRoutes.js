@@ -1,6 +1,11 @@
+// Require Express :
 const express = require("express");
 const router = express.Router();
+
+// Require Auth Controller :
 const authController = require("../Controllers/authController");
+
+// Require Protect And Admin Routes :
 const { protect } = require("../Middlewares/authMiddleware");
 const {adminOnly} = require("../Middlewares/adminMiddleware");
 
@@ -17,4 +22,6 @@ router.get("/getAllusers", protect,adminOnly, authController.getAllUsers);
 router.patch('/softDelete/:id',protect,adminOnly,authController.softDelete);
 router.delete('/delete/:id',protect,adminOnly,authController.deleteUserPermanent);
 
+
+// Export Module :
 module.exports = router;

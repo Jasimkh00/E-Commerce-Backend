@@ -1,226 +1,320 @@
+// Require Models :
 const Order = require("../Models/orderModel");
 const Cart = require("../Models/cartModel");
 const Product = require("../Models/productModel");
 const User = require("../Models/userModel");
-const { sendOrderPlacedEmail, sendOrderStatusEmail } = require("../Utils/emailOrderService");
 
-// Logic For Place Order (For Public):
+// Require Email Order Service (From Utils) :
+const {
+  sendOrderPlacedEmail,
+  sendOrderStatusEmail
+} = require("../Utils/emailOrderService");
+
+// Generate Order Number :
+const generateOrderNumber = () => {
+
+  const date = new Date()
+
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+
+  const random = Math.floor(1000 + Math.random() * 9000)
+
+  return `ORD-${y}${m}${d}-${random}`
+};
+
+// Logic For Place Order (For Public) :
 const placeOrder = async (req, res) => {
-  try {
-    const { shippingAddress, paymentMethod } = req.body;
 
+  // Using Try-Catch :
+  try {
+
+    // Get Data From Body :
+    const { shippingAddress, paymentMethod } = req.body
+
+    // Using If :
     if (!shippingAddress || !paymentMethod) {
       return res.status(400).json({
-        message: "Shipping address and payment method required",
+        message: "Shipping address and payment method required."
       });
     }
 
-    const cart = await Cart.findOne({ userId: req.user._id });
+    // Find Cart By User Id :
+    const cart = await Cart.findOne({ userId: req.user._id })
 
     if (!cart || cart.items.length === 0) {
-      return res.status(400).json({
-        message: "Cart is empty",
-      });
+      return res.status(400).json({ message: "Cart is empty !" })
     }
 
-    let subtotal = 0;
+    let subtotal = 0
+    const orderItems = []
 
-    // STOCK VERIFY + DEDUCT
     for (const item of cart.items) {
-      const product = await Product.findById(item.productId);
 
-      if (!product || product.stockTotal < item.qty) {
-        return res.status(400).json({
-          message: `Insufficient stock for ${item.titleSnapshot}`,
+      // Find Product By Id :
+      const product = await Product.findById(item.productId)
+
+      if (!product || !product.isActive) {
+        return res.status(404).json({
+          message: `Product not available`
         });
       }
 
-      product.stockTotal -= item.qty;
+      // Find Varient By Id :
+      const variant = product.variants.id(item.variantId)
+
+      if (!variant || variant.stock < item.qty) {
+        return res.status(400).json({
+          message: `Insufficient stock for ${item.titleSnapshot}`
+        });
+      };
+
+      // Stock Managements  (For Over Selling):
+      variant.stock = variant.stock - item.qty
+      product.totalSold = product.totalSold + item.qty
+      product.totalStock = product.totalStock - item.qty
+
+      // Save Product :
       await product.save();
 
-      subtotal += item.priceSnapshot * item.qty;
-    }
+      subtotal += item.priceSnapshot * item.qty
 
-    // CREATE ORDER
+      orderItems.push({
+        productId: item.productId,
+        variantId: item.variantId,
+        titleSnapshot: item.titleSnapshot,
+        priceSnapshot: item.priceSnapshot,
+        imageSnapshot: item.imageSnapshot,
+        qty: item.qty
+      });
+
+    };
+
+    // Create Order :
     const order = await Order.create({
+      orderNumber: generateOrderNumber(),
       userId: req.user._id,
-      items: cart.items,
+      items: orderItems,
       subtotal,
       shippingAddress,
-      paymentMethod,
+      paymentMethod
+
     });
 
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id)
 
-    // Delivery date example (5 days later)
-    const deliveryDate = new Date();
-    deliveryDate.setDate(deliveryDate.getDate() + 5);
+    const deliveryDate = new Date()
+    deliveryDate.setDate(deliveryDate.getDate() + 5)
 
-    // Send order placed email (async handling)
+    // Send Email :
     try {
+
       await sendOrderPlacedEmail(
         user.email,
         order,
         deliveryDate.toDateString()
       );
-    } catch (emailError) {
-      console.log("Email failed but order placed:", emailError.message);
-    }
 
-    // CLEAR CART
-    cart.items = [];
-    await cart.save();
+    } catch (e) {
+      console.log("Email error", e.message);
+    };
 
-    return res.status(201).json({
-      message: "Order placed successfully",
-      data: order,
+    // Save Cart :
+    cart.items = []
+    await cart.save()
+
+    // Response :
+    res.status(201).json({
+      message: "Order placed successfully .",
+      data: order
+
     });
 
   } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
+    res.status(500).json({ message: error.message });
+  };
+
 };
 
-// Logic For Get My Order (For Public) :
+
+// Logic For Get My Orders (For Public) :
 const getMyOrders = async (req, res) => {
-  try {
-    const orders = await Order.find({ userId: req.user._id }).sort("-createdAt");
 
-    return res.status(200).json({
+  // Using Try-Catch :
+  try {
+
+    const orders = await Order
+      .find({ userId: req.user._id })
+      .sort("-createdAt")
+
+    res.status(200).json({
       message: "Orders fetched",
-      data: orders,
+      data: orders
+
     });
 
   } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
+    res.status(500).json({ message: error.message });
+  };
+
 };
 
-// Logic For Get All Orders (For Admin):
+// LogicFor Get All Orders (For Admin) :
 const getAllOrders = async (req, res) => {
-  try {
-    const orders = await Order.find()
-      .populate("userId", "fullName email")  // Corrected to fullName
-      .sort("-createdAt");
 
-    return res.status(200).json({
+  // Using Try-Catch :
+  try {
+
+    const orders = await Order
+      .find()
+      .populate("userId", "fullName email")
+      .sort("-createdAt")
+
+    res.status(200).json({
       message: "All orders fetched",
-      data: orders,
+      data: orders
+
     });
 
   } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
+    res.status(500).json({ message: error.message });
+  };
+
 };
 
 // Logic For Update Order Status (For Admin) :
 const updateOrderStatus = async (req, res) => {
-  try {
-    const { status } = req.body;
 
+  // Using Try-Catch :
+  try {
+
+    const { status } = req.body
+
+    const allowedStatus = [
+      "pending",
+      "confirmed",
+      "shipped",
+      "delivered",
+      "cancelled"
+    ]
+
+    if (!allowedStatus.includes(status)) {
+      return res.status(400).json({
+        message: "Invalid order status"
+      });
+    }
     const order = await Order.findById(req.params.orderId);
 
+    // Using If :
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    order.status = status;
-    await order.save();
+    order.status = status
 
-    // Get user email
+    await order.save()
+
+    // Find User And Send Email :
     const user = await User.findById(order.userId);
 
-    // Send status email
+    // Using Try-Catch :
     try {
-      await sendOrderStatusEmail(user.email, order);
-    } catch (emailError) {
-      console.log("Error sending status update email:", emailError.message);
+      await sendOrderStatusEmail(user.email, order)
+
+    } catch (e) {
+      console.log("Email error", e.message);
     }
 
-    return res.status(200).json({
+    // Response :
+    res.status(200).json({
       message: "Order status updated",
-      data: order,
+      data: order
     });
 
   } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
+    res.status(500).json({ message: error.message });
+  };
+
 };
 
-// Logic For Order Cancel (For Public):
+// Logic For Order Cancel (For Public) :
 const cancelOrder = async (req, res) => {
+
+  // Using Try-Catch :
   try {
-    const order = await Order.findById(req.params.orderId);
+
+    const order = await Order.findById(req.params.orderId)
 
     if (!order) {
-      return res.status(404).json({
-        message: "Order not found",
-      });
+      return res.status(404).json({ message: "Order not found !" });
     }
 
-    // Check ownership (unless admin)
     if (
-      order.userId.toString() !== req.user._id.toString() &&
-      req.user.role !== "admin"
+      order.userId.toString() !== req.user._id.toString()
+      && req.user.role !== "admin"
     ) {
       return res.status(403).json({
-        message: "Not authorized to cancel this order",
+        message: "Not authorized !"
       });
     }
 
-    // Prevent double cancel
     if (order.status === "cancelled") {
       return res.status(400).json({
-        message: "Order already cancelled",
+        message: "Order already cancelled ."
       });
     }
 
-    // Cannot cancel shipped And delivered
     if (order.status === "shipped" || order.status === "delivered") {
       return res.status(400).json({
-        message: "Order cannot be cancelled after shipment",
+        message: "Order cannot be cancelled"
       });
     }
 
-    // Restore stock (Improvement: Added error logging and checking)
     for (const item of order.items) {
-      const product = await Product.findById(item.productId);
+
+      const product = await Product.findById(item.productId)
 
       if (product) {
-        product.stockTotal += item.qty;  // Stock restore here
-        await product.save();
-      } else {
-        console.error(`Product not found for order item: ${item.productId}`);
-        return res.status(404).json({
-          message: `Product with ID ${item.productId} not found`,
-        });
-      }
-    }
 
-    // Update order status
-    order.status = "cancelled";
+        const variant = product.variants.id(item.variantId)
+
+        if (variant) {
+          variant.stock = variant.stock + item.qty
+          product.totalStock = product.totalStock + item.qty
+          await product.save();
+
+        }
+
+      };
+
+    }
+    // Status Changed :
+    order.status = "cancelled"
     await order.save();
 
-    // Send email on cancellation
-    const user = await User.findById(order.userId);
-    await sendOrderStatusEmail(user.email, order);
+    // Find User And Send Email :
+    const user = await User.findById(order.userId)
+    await sendOrderStatusEmail(user.email, order)
 
-    return res.status(200).json({
-      message: "Order cancelled successfully",
-      data: order,
+    // Response :
+    res.status(200).json({
+      message: "Order cancelled",
+      data: order
+
     });
 
   } catch (error) {
-    return res.status(500).json({
-      message: error.message,
-    });
-  }
+    res.status(500).json({ message: error.message });
+  };
+
 };
 
+// EXPORT MODULES:
 module.exports = {
   placeOrder,
   getMyOrders,
   getAllOrders,
   updateOrderStatus,
-  cancelOrder,
+  cancelOrder
 };

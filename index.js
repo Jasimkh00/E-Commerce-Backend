@@ -17,15 +17,18 @@ const app = express();
 // Middleware For Json (Used To Convert Json String Into Js Object) :
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("API Working Successfully");
-});
+
 // Import Routes :
 const userRoutes = require('./Routes/userRoutes');
 const categoryRoutes = require('./Routes/categoryRoutes');
 const productRoutes = require('./Routes/productRoutes');
 const cartRoutes = require('./Routes/cartRoutes');
 const orderRoutes = require('./Routes/orderRoutes');
+const reviewRoutes = require('./Routes/reviewRoutes');
+const saleRoutes = require('./Routes/saleRoutes');
+const wishListRoutes = require('./Routes/wishListRoutes');
+const inventoryRoutes = require('./Routes/inventoryRoutes');
+const adminDashboardRoutes = require('./Routes/adminDashboardRoutes');
 
 
 
@@ -35,6 +38,11 @@ app.use('/api/Category',categoryRoutes);
 app.use('/api/Product',productRoutes);
 app.use('/api/Cart',cartRoutes);
 app.use('/api/Order',orderRoutes);
+app.use('/api/review',reviewRoutes);
+app.use('/api/sale',saleRoutes);
+app.use('/api/wishList',wishListRoutes);
+app.use('/api/inventory',inventoryRoutes);
+app.use('/api/adminDashboard',adminDashboardRoutes);
 
 
 // Select Port :

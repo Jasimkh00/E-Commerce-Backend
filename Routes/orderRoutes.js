@@ -1,17 +1,29 @@
+// Require Express :
 const express = require("express");
 const router = express.Router();
 
-const orderController = require("../Controllers/orderController");
+// Require Order Controller :
+const {
+    placeOrder,
+    getMyOrders,
+    getAllOrders,
+    updateOrderStatus,
+    cancelOrder
+} = require("../Controllers/orderController");
+
+// Require Protect And Admin Middleware :
 const { protect } = require("../Middlewares/authMiddleware");
-const {adminOnly} = require("../Middlewares/adminMiddleware");
+const { adminOnly } = require("../Middlewares/adminMiddleware");
 
 // For Public :
-router.post("/orderPlace", protect, orderController.placeOrder);
-router.get("/getmyorder", protect, orderController.getMyOrders);
-router.delete("/orderCancel/:orderId", protect, orderController.cancelOrder);
+router.post("/placeOrder", protect, placeOrder);
+router.get("/my-orders", protect, getMyOrders);
+router.patch("/:orderId/cancel", protect, cancelOrder);
+
 
 // For Admin :
-router.get("/getAllorders", protect, adminOnly, orderController.getAllOrders);
-router.put("/updateOrderStatus/:orderId", protect, adminOnly, orderController.updateOrderStatus);
+router.get("/getAllOrders", protect, adminOnly, getAllOrders);
+router.patch("/:orderId/status", protect, adminOnly, updateOrderStatus);
 
-module.exports=router;
+// Export Module :
+module.exports = router;

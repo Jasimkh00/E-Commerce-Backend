@@ -1,6 +1,7 @@
+// Require Mongoose :
 const mongoose = require("mongoose");
 
-// Schema Function :
+// Function For User Model :
 const userSchema = new mongoose.Schema(
   {
     // For Full Name :
@@ -53,4 +54,5 @@ const userSchema = new mongoose.Schema(
 
 );
 
+// Export Module :
 module.exports = mongoose.model("User", userSchema);
