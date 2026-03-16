@@ -16,7 +16,7 @@ const {protect} = require("../Middlewares/authMiddleware");
 const {adminOnly} = require("../Middlewares/adminMiddleware");
 
 // Get Inventory Dashboard :
-router.get("/dashboard",protect,adminOnly,getInventoryDashboard);
+router.get("/getinventory",protect,adminOnly,getInventoryDashboard);
 
 // Get Low Product Stock Alert :
 router.get("/low-products",protect,adminOnly,getLowProductStock);

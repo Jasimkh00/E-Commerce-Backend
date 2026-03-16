@@ -79,9 +79,31 @@ try{
 }
 };
 
+// Logic For Delete Sale (For Admin) :
+const deleteSale = async (req, res) => {
+  try {
+
+    const sale = await Sale.findByIdAndDelete(req.params.id);
+
+    if (!sale) {
+      return res.status(404).json({
+        message: "Sale not found"
+      });
+    }
+
+    res.status(200).json({
+      message: "Sale deleted successfully"
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // EXPORT MODULE :
 module.exports={
  createSale,
  updateSale,
- getActiveSales
+ getActiveSales,
+ deleteSale
 };

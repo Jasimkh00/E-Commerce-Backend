@@ -123,7 +123,7 @@ const getLowVariantStock = async (req, res) => {
 
 };
 
-// Logic For Out Of Stock Products :
+// Logic For Out Of Stock Products (For Complete Fininsh Products) :
 const getOutOfStock = async (req, res) => {
 
   // Using Try-catch :

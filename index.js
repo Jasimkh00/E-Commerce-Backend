@@ -29,6 +29,7 @@ const saleRoutes = require('./Routes/saleRoutes');
 const wishListRoutes = require('./Routes/wishListRoutes');
 const inventoryRoutes = require('./Routes/inventoryRoutes');
 const adminDashboardRoutes = require('./Routes/adminDashboardRoutes');
+const sliderRoutes = require("./Routes/sliderRoutes");
 
 
 
@@ -43,6 +44,7 @@ app.use('/api/sale',saleRoutes);
 app.use('/api/wishList',wishListRoutes);
 app.use('/api/inventory',inventoryRoutes);
 app.use('/api/adminDashboard',adminDashboardRoutes);
+app.use('/api/slider',sliderRoutes);
 
 
 // Select Port :

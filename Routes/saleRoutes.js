@@ -6,7 +6,8 @@ const router = express.Router();
 const {
  createSale,
  updateSale,
- getActiveSales
+ getActiveSales,
+ deleteSale
 } = require("../Controllers/saleController");
 
 // Require Protect And Admin Middleware :
@@ -21,6 +22,9 @@ router.put("/update/:id",protect,adminOnly,updateSale);
 
 // Get Sale (For Public):
 router.get("/active",protect,getActiveSales);
+
+// Delete Sale (For Admin) :
+router.delete("/delete/:id",protect,adminOnly,deleteSale);
 
 // Export Module :
 module.exports = router;
