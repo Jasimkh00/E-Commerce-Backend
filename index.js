@@ -11,7 +11,7 @@ dotenv.config();
 // For Connecting Mongo-DB :
 ConnectDB();
 
-// Variable For Express :
+// Create Server :
 const app = express();
 
 // Middleware For Json (Used To Convert Json String Into Js Object) :
