@@ -69,7 +69,5 @@ categorySchema.pre("save", async function () {
     this.slug = slug
   }
 
-  
-
 });
 module.exports = mongoose.model("Category", categorySchema)
