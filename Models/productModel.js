@@ -133,47 +133,64 @@ const productSchema = new mongoose.Schema(
 
 
 // Pre Save Hook (Middleware) :
-productSchema.pre("save", function (next) {
+productSchema.pre("save", async function () {
 
-  // Slug Generate :
-  if (this.isModified("title")) {
-    this.slug = slugify(this.title, { lower: true, strict: true });
+  // -----------------------------
+  // SLUG GENERATION (CATEGORY STYLE)
+  // -----------------------------
+  if (this.isModified("title") && this.title) {
+
+    let slug = slugify(this.title, { lower: true, strict: true });
+
+    const Product = mongoose.model("Product");
+
+    let existing = await Product.findOne({
+      slug,
+      _id: { $ne: this._id }
+    });
+
+    if (existing) {
+      slug = slug + "-" + Date.now();
+    }
+
+    this.slug = slug;
   }
 
-  // Variant Price Calculation :
-  if (this.variants && this.variants.length > 0) {
+  // -----------------------------
+  // VARIANT PRICE + STOCK CALCULATION
+  // -----------------------------
+  if (Array.isArray(this.variants) && this.variants.length > 0) {
 
-    this.variants.forEach(variant => {
+    let totalStock = 0;
+
+    for (let i = 0; i < this.variants.length; i++) {
+
+      let variant = this.variants[i];
+
+      const price = Number(variant.price) || 0;
+      const discountValue = Number(variant.discountValue) || 0;
+      const stock = Number(variant.stock) || 0;
+
+      let finalPrice = price;
 
       if (variant.discountType === "percent") {
-
-        variant.finalPrice =
-          variant.price - (variant.price * variant.discountValue / 100);
-
+        finalPrice = price - (price * discountValue / 100);
       }
 
       else if (variant.discountType === "flat") {
-
-        variant.finalPrice =
-          variant.price - variant.discountValue;
-
+        finalPrice = price - discountValue;
       }
 
-      else {
+      if (finalPrice < 0) finalPrice = 0;
 
-        variant.finalPrice = variant.price;
+      // update variant
+      this.variants[i].finalPrice = finalPrice;
 
-      }
+      totalStock += stock;
+    }
 
-      if (variant.finalPrice < 0) {
-        variant.finalPrice = 0;
-      }
-
-    });
-
+    this.totalStock = totalStock;
   }
-
-  next();
 
 });
 
