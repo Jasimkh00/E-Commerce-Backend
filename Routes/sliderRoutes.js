@@ -16,7 +16,7 @@ const { adminOnly } = require('../Middlewares/adminMiddleware');
 
 // For Admin :
 router.post("/create", protect, adminOnly, createSlider);
-router.put("update/:id", protect, adminOnly, updateSlider);
+router.put("/update/:id", protect, adminOnly, updateSlider);
 router.delete("/delete/:id", protect, adminOnly, deleteSlider);
 
 // For Public (Home-Page) :

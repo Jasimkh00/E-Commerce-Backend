@@ -7,6 +7,8 @@ const createSlider = async (req, res) => {
     // Using Try-Catch :
     try {
 
+         console.log("BODY:", req.body);
+    console.log("USER:", req.user);
         // Get Data From Body :
         const slider = await Slider.create(req.body);
 
