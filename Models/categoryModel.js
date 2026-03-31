@@ -39,7 +39,7 @@ const categorySchema = new mongoose.Schema(
 
 
 // Pre Save Hook For Generate Slug With Parent Category :
-categorySchema.pre("save", async function (next) {
+categorySchema.pre("save", async function () {
 
   if (this.isModified("name")) {
 
@@ -69,7 +69,7 @@ categorySchema.pre("save", async function (next) {
     this.slug = slug
   }
 
-  next()
+  
 
 });
 module.exports = mongoose.model("Category", categorySchema)
