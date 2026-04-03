@@ -22,7 +22,7 @@ router.get("/top-rated",protect,productController.getTopRated);
 router.post("/createProduct", protect, adminOnly, productController.createProduct);
 router.put("/updateProduct/:id", protect, adminOnly, productController.updateProduct);
 router.patch("/deactivateProduct/:id", protect, adminOnly, productController.deactivateProduct);
-router.patch("/updateProductStock/:varientid",productController,adminOnly,productController.updateProductStock);
+router.patch("/updateProductStock/:varientid",protect,adminOnly,productController.updateProductStock);
 
 
 // Export Module :

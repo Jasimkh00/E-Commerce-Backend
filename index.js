@@ -3,7 +3,7 @@ const express = require('express');
 
 const dotenv = require('dotenv');
 
-const ConnectDB = require('./Config/db');
+const ConnectDB = require('./Src/Config/db');
 
 //  Transfer Data From Env :
 dotenv.config();
@@ -19,17 +19,17 @@ app.use(express.json());
 
 
 // Import Routes :
-const userRoutes = require('./Routes/userRoutes');
-const categoryRoutes = require('./Routes/categoryRoutes');
-const productRoutes = require('./Routes/productRoutes');
-const cartRoutes = require('./Routes/cartRoutes');
-const orderRoutes = require('./Routes/orderRoutes');
-const reviewRoutes = require('./Routes/reviewRoutes');
-const saleRoutes = require('./Routes/saleRoutes');
-const wishListRoutes = require('./Routes/wishListRoutes');
-const inventoryRoutes = require('./Routes/inventoryRoutes');
-const adminDashboardRoutes = require('./Routes/adminDashboardRoutes');
-const sliderRoutes = require("./Routes/sliderRoutes");
+const userRoutes = require('./Src/modules/auth/Routes');
+const categoryRoutes = require('./Src/modules/category/Routes');
+const productRoutes = require('./Src/modules/product/Routes');
+const cartRoutes = require('./Src/modules/cart/Routes');
+const orderRoutes = require('./Src/modules/order/Routes');
+const reviewRoutes = require('./Src/modules/review/Routes');
+const saleRoutes = require('./Src/modules/sale/Routes');
+const wishListRoutes = require('./Src/modules/wishList/Routes');
+const inventoryRoutes = require('./Src/modules/inventory/Routes');
+const adminDashboardRoutes = require('./Src/modules/adminDashboard/Routes');
+const sliderRoutes = require("./Src/modules/slider/Routes");
 
 
 
