@@ -5,8 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "dev": "nodemon index.js",
-    "seed:admin": "node Seed/seedAdmin.js"
+    "dev": "nodemon index.js"
+    
   },
   "author": "",
   "license": "ISC",
