@@ -48,7 +48,7 @@ app.use('/api/slider',sliderRoutes);
 
 
 // Select Port :
-const PORT = process.env.PORT 
+const PORT = 3000
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
