@@ -2,39 +2,23 @@
 const Product = require("../../../Src/modules/product/Model");
 const Category = require("../../../Src/modules/category/Model");
 
-//Logic For  CREATE PRODUCT :
+//Logic For CREATE PRODUCT :
 const createProductService = async (body) => {
-
   const { title, description, categoryId, images, variants, tags, isNewArrival } = body;
 
-  if (!title || !categoryId) {
-    throw new Error("Title and category required");
-  }
+  if (!title || !categoryId) throw new Error("Title and category required");
+  if (!variants?.length) throw new Error("At least one variant required");
 
-  if (!variants || variants.length === 0) {
-    throw new Error("At least one variant required");
-  }
+  const category = await Category.findById(categoryId).lean();
+  if (!category || !category.isActive) throw new Error("Invalid category");
+  if (!category.parentCategory) throw new Error("Product can only be added to child category");
 
-  const category = await Category.findById(categoryId);
+  const exists = await Product.exists({ title, categoryId });
+  if (exists) throw new Error("Product already exists in this category");
 
-  if (!category || !category.isActive) {
-    throw new Error("Invalid category");
-  }
+  let totalStock = variants.reduce((sum, v) => sum + v.stock, 0);
 
-  if (!category.parentCategory) {
-    throw new Error("Product can only be added to child category");
-  }
-
-  const existing = await Product.findOne({ title, categoryId });
-
-  if (existing) {
-    throw new Error("Product already exists in this category");
-  }
-
-  let totalStock = 0;
-  variants.forEach(v => totalStock += v.stock);
-
-  const product = await Product.create({
+  return await Product.create({
     title,
     description,
     categoryId,
@@ -44,14 +28,11 @@ const createProductService = async (body) => {
     isNewArrival,
     totalStock
   });
-
-  return product;
 };
 
 
-// Logic For GET PRODUCTS :
+//Logic For GET ALL PRODUCTS :
 const getProductsService = async (query) => {
-
   const {
     categoryId,
     minPrice,
@@ -66,13 +47,8 @@ const getProductsService = async (query) => {
 
   let filter = { isActive: true };
 
-  if (q) {
-    filter.title = { $regex: q, $options: "i" };
-  }
-
-  if (categoryId) {
-    filter.categoryId = categoryId;
-  }
+  if (q) filter.title = { $regex: q, $options: "i" };
+  if (categoryId) filter.categoryId = categoryId;
 
   if (minPrice || maxPrice) {
     filter["variants.price"] = {};
@@ -84,17 +60,16 @@ const getProductsService = async (query) => {
     filter["variants.stock"] = { $gt: 0 };
   }
 
-  const skip = (Number(page) - 1) * Number(limit);
+  const skip = (page - 1) * limit;
 
+  // Queries :
   const products = await Product.find(filter)
-    .populate({
-      path: "categoryId",
-      select: "name parentCategory",
-      populate: { path: "parentCategory", select: "name" }
-    })
+    .select("title images totalStock categoryId createdAt")
+    .populate("categoryId", "name")
     .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
     .skip(skip)
-    .limit(Number(limit));
+    .limit(Number(limit))
+    .lean();
 
   const total = await Product.countDocuments(filter);
 
@@ -110,76 +85,37 @@ const getProductsService = async (query) => {
 };
 
 
-//Logic For GET SINGLE PRODUCT :
+// Logic For Get SINGLE PRODUCT :
 const getSingleProductService = async (slug) => {
+  const product = await Product.findOne({ slug, isActive: true })
+    .populate("categoryId", "name")
+    .lean();
 
-  const product = await Product.findOne({
-    slug,
-    isActive: true
-  }).populate({
-    path: "categoryId",
-    select: "name parentCategory",
-    populate: { path: "parentCategory", select: "name" }
-  });
-
-  if (!product) {
-    throw new Error("Product not found");
-  }
+  if (!product) throw new Error("Product not found");
 
   return product;
 };
 
 
-//Logic For UPDATE PRODUCT :
+// Logic For UPDATE PRODUCT :
 const updateProductService = async (id, body) => {
-
   const product = await Product.findById(id);
+  if (!product) throw new Error("Product not found");
 
-  if (!product) {
-    throw new Error("Product not found");
+  Object.assign(product, body);
+
+  if (body.variants) {
+    product.totalStock = body.variants.reduce((sum, v) => sum + v.stock, 0);
   }
-
-  const { title, description, categoryId, images, variants, tags, isNewArrival, isActive } = body;
-
-  if (title) product.title = title;
-  if (description) product.description = description;
-
-  if (categoryId) {
-    const category = await Category.findById(categoryId);
-    if (!category || !category.isActive) {
-      throw new Error("Invalid category");
-    }
-    product.categoryId = categoryId;
-  }
-
-  if (images) product.images = images;
-
-  if (variants) {
-    product.variants = variants;
-
-    let totalStock = 0;
-    variants.forEach(v => totalStock += v.stock);
-    product.totalStock = totalStock;
-  }
-
-  if (tags) product.tags = tags;
-  if (typeof isNewArrival !== "undefined") product.isNewArrival = isNewArrival;
-  if (typeof isActive !== "undefined") product.isActive = isActive;
 
   await product.save();
-
   return product;
 };
 
 
-//Logic For UPDATE STOCK :
+// Logic For UPDATE STOCK :
 const updateProductStockService = async (id, body) => {
-
   const { variantId, stock } = body;
-
-  if (!variantId || stock === undefined) {
-    throw new Error("variantId and stock are required");
-  }
 
   const product = await Product.findById(id);
   if (!product) throw new Error("Product not found");
@@ -189,50 +125,49 @@ const updateProductStockService = async (id, body) => {
 
   variant.stock = stock;
 
-  let totalStock = 0;
-  product.variants.forEach(v => totalStock += v.stock);
-  product.totalStock = totalStock;
+  product.totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
 
   await product.save();
-
   return product;
 };
 
 
-// SIMPLE LISTS
+// Logic For New Arrivals :
 const getNewArrivalsService = async () => {
   return await Product.find({ isActive: true, isNewArrival: true })
     .sort("-createdAt")
-    .limit(10);
+    .limit(10)
+    .lean();
 };
 
+// Logic For BEST SELLING PRODUCTS :
 const getBestSellingService = async () => {
   return await Product.find({ isActive: true })
     .sort("-totalSold")
-    .limit(10);
+    .limit(10)
+    .lean();
 };
 
+// Logic For TOP-RATED PRODUCTS :
 const getTopRatedService = async () => {
   return await Product.find({ isActive: true })
     .sort("-averageRating")
-    .limit(10);
+    .limit(10)
+    .lean();
 };
 
 
-// Logic For DEACTIVATE :
+// Logic For DEACTIVATE PRODUCT :
 const deactivateProductService = async (id) => {
-
   const product = await Product.findById(id);
   if (!product) throw new Error("Product not found");
 
   product.isActive = false;
   await product.save();
-
   return true;
 };
 
-
-// EXPORT
+// Export Modules :
 module.exports = {
   createProductService,
   getProductsService,
