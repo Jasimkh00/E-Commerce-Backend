@@ -1,3 +1,4 @@
+// Require Product Service :
 const service = require("../../../Src/modules/product/ProductService");
 
 // CREATE
@@ -20,7 +21,7 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-// SINGLE
+// GET SINGLE
 exports.getSingleProduct = async (req, res) => {
   try {
     const data = await service.getSingleProductService(req.params.slug);
@@ -40,7 +41,7 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// STOCK
+// UPDATE STOCK
 exports.updateProductStock = async (req, res) => {
   try {
     const data = await service.updateProductStockService(req.params.id, req.body);
@@ -50,28 +51,43 @@ exports.updateProductStock = async (req, res) => {
   }
 };
 
-// LISTS
+// NEW ARRIVALS
 exports.getNewArrivals = async (req, res) => {
-  const data = await service.getNewArrivalsService();
-  res.json({ data });
+  try {
+    const data = await service.getNewArrivalsService();
+    res.status(200).json({ data });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
 };
 
+// BEST SELLING
 exports.getBestSelling = async (req, res) => {
-  const data = await service.getBestSellingService();
-  res.json({ data });
+  try {
+    const data = await service.getBestSellingService();
+    res.status(200).json({ data });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
 };
 
+// TOP RATED
 exports.getTopRated = async (req, res) => {
-  const data = await service.getTopRatedService();
-  res.json({ data });
+  try {
+    const data = await service.getTopRatedService();
+    res.status(200).json({ data });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
 };
 
 // DEACTIVATE
 exports.deactivateProduct = async (req, res) => {
   try {
     await service.deactivateProductService(req.params.id);
-    res.json({ message: "Deactivated" });
+    res.status(200).json({ message: "Deactivated" });
   } catch (e) {
     res.status(404).json({ message: e.message });
   }
 };
+
