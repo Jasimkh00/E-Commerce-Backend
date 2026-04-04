@@ -21,7 +21,7 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-// GET SINGLE
+// SINGLE
 exports.getSingleProduct = async (req, res) => {
   try {
     const data = await service.getSingleProductService(req.params.slug);
@@ -41,7 +41,7 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// UPDATE STOCK
+// STOCK
 exports.updateProductStock = async (req, res) => {
   try {
     const data = await service.updateProductStockService(req.params.id, req.body);
