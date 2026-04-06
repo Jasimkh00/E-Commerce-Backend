@@ -4,24 +4,27 @@ const service = require("../../../Src/modules/product/ProductService");
 // CREATE
 exports.createProduct = async (req, res) => {
   try {
-    const product = await service.createProductService(req.body || {}, req.files || []);
+    const body = req.body || {};
+    const files = req.files || [];
+
+    console.log("REQ BODY:", body);      // ✅ Debug body
+    console.log("REQ FILES:", files);    // ✅ Debug files
+
+    const product = await service.createProductService(body, files);
 
     res.status(201).json({
       success: true,
       product
     });
   } catch (err) {
-    console.error("🔥 ERROR:", err); // 👈 ADD THIS
-
+    console.error("🔥 CREATE PRODUCT ERROR:", err); // ✅ Full error in console
     res.status(500).json({
       success: false,
       message: err.message,
-      stack: err.stack // 👈 ADD THIS
+      stack: err.stack
     });
   }
 };
-
-
 
 // GET ALL
 exports.getProducts = async (req, res) => {
