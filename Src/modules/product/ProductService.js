@@ -8,12 +8,26 @@ const createProductService = async (body, files) => {
 
   if (!title || !categoryId) throw new Error("Title and category required");
 
-  // ✅ FIX: parse variants if string
+  // ✅ FIX: variants parse
   if (typeof variants === "string") {
-    variants = JSON.parse(variants);
+    try {
+      variants = JSON.parse(variants);
+    } catch (e) {
+      throw new Error("Invalid variants JSON");
+    }
   }
 
-  if (!variants?.length) throw new Error("At least one variant required");
+  if (!Array.isArray(variants) || variants.length === 0) {
+    throw new Error("At least one variant required");
+  }
+
+  // ✅ FIX: tags parse
+  if (typeof tags === "string") {
+    tags = tags.split(",").map(t => t.trim());
+  }
+
+  // ✅ FIX: boolean convert
+  isNewArrival = isNewArrival === "true" || isNewArrival === true;
 
   const category = await Category.findById(categoryId).lean();
   if (!category) throw new Error("Invalid category");
@@ -21,8 +35,7 @@ const createProductService = async (body, files) => {
   const exists = await Product.exists({ title, categoryId });
   if (exists) throw new Error("Product already exists");
 
-  const totalStock = variants.reduce((sum, v) => sum + v.stock, 0);
-
+  // ✅ images fix
   const images = files?.map(file => `/uploads/${file.filename}`) || [];
 
   return await Product.create({
@@ -32,8 +45,7 @@ const createProductService = async (body, files) => {
     images,
     variants,
     tags,
-    isNewArrival,
-    totalStock
+    isNewArrival
   });
 };
 
