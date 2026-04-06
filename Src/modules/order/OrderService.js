@@ -120,37 +120,37 @@ const getAllOrdersService = async () => {
 
 // Logic For Update Status :
 const updateOrderStatusService = async (orderId, status) => {
-
-  const allowedStatus = [
-    "pending",
-    "confirmed",
-    "shipped",
-    "delivered",
-    "cancelled"
-  ]
+  const allowedStatus = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
 
   if (!allowedStatus.includes(status)) {
-    throw new Error("Invalid order status")
+    throw new Error("Invalid order status");
   }
 
-  const order = await Order.findById(orderId)
+  // 🔥 LEAN QUERY (fast read)
+  const order = await Order.findById(orderId).lean();
 
   if (!order) {
-    throw new Error("Order not found")
+    throw new Error("Order not found");
   }
 
-  order.status = status
-  await order.save()
+  // 🔥 Update using direct DB query (NO save())
+  const updatedOrder = await Order.findByIdAndUpdate(
+    orderId,
+    { status },
+    { new: true }
+  ).lean();
 
-  const user = await User.findById(order.userId)
+  // 🔥 lean user fetch
+  const user = await User.findById(order.userId).lean();
 
-  try {
-    await sendOrderStatusEmail(user.email, order)
-  } catch (e) {
-    console.log("Email error", e.message);
-  }
+  // ⚡ NON-BLOCKING EMAIL (VERY IMPORTANT)
+  setImmediate(() => {
+    sendOrderStatusEmail(user?.email, updatedOrder).catch((e) => {
+      console.log("Email error:", e.message);
+    });
+  });
 
-  return order
+  return updatedOrder;
 };
 
 // Logic For Cancel Order :
