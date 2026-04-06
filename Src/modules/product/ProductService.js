@@ -3,10 +3,16 @@ const Product = require("../../../Src/modules/product/Model");
 const Category = require("../../../Src/modules/category/Model");
 
 // CREATE PRODUCT
-const createProductService = async (body) => {
-  const { title, description, categoryId, images, variants, tags, isNewArrival } = body;
+const createProductService = async (body, files) => {
+  let { title, description, categoryId, variants, tags, isNewArrival } = body;
 
   if (!title || !categoryId) throw new Error("Title and category required");
+
+  // ✅ FIX: parse variants if string
+  if (typeof variants === "string") {
+    variants = JSON.parse(variants);
+  }
+
   if (!variants?.length) throw new Error("At least one variant required");
 
   const category = await Category.findById(categoryId).lean();
@@ -16,6 +22,8 @@ const createProductService = async (body) => {
   if (exists) throw new Error("Product already exists");
 
   const totalStock = variants.reduce((sum, v) => sum + v.stock, 0);
+
+  const images = files?.map(file => `/uploads/${file.filename}`) || [];
 
   return await Product.create({
     title,

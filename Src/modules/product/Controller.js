@@ -4,12 +4,21 @@ const service = require("../../../Src/modules/product/ProductService");
 // CREATE
 exports.createProduct = async (req, res) => {
   try {
-    const data = await service.createProductService(req.body);
-    res.status(201).json({ message: "Product created", data });
-  } catch (e) {
-    res.status(400).json({ message: e.message });
+    const product = await service.createProductService(req.body, req.files);
+
+    res.status(201).json({
+      success: true,
+      product
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: err.message
+    });
   }
 };
+
+
 
 // GET ALL
 exports.getProducts = async (req, res) => {

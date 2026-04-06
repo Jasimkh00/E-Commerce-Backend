@@ -5,6 +5,8 @@ const dotenv = require('dotenv');
 
 const ConnectDB = require('./Src/Config/db');
 
+const path = require('path');
+
 //  Transfer Data From Env :
 dotenv.config();
 
@@ -46,6 +48,8 @@ app.use('/api/inventory',inventoryRoutes);
 app.use('/api/adminDashboard',adminDashboardRoutes);
 app.use('/api/slider',sliderRoutes);
 
+
+app.use("/uploads", express.static("uploads"));
 
 // Select Port :
 const PORT = process.env.PORT
