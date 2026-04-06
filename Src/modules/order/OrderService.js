@@ -126,25 +126,23 @@ const updateOrderStatusService = async (orderId, status) => {
     throw new Error("Invalid order status");
   }
 
-  const order = await Order.findById(orderId).lean();
-
-  if (!order) {
-    throw new Error("Order not found");
-  }
-
+  // ✅ DIRECT UPDATE (single DB call)
   const updatedOrder = await Order.findByIdAndUpdate(
     orderId,
     { status },
     { new: true }
   ).lean();
 
-  const user = await User.findById(order.userId).lean();
+  if (!updatedOrder) {
+    throw new Error("Order not found");
+  }
 
-  // already non-blocking
+  // ✅ USER FETCH
+  const user = await User.findById(updatedOrder.userId).lean();
+
+  // ✅ NON-BLOCKING EMAIL
   setImmediate(() => {
-    sendOrderStatusEmail(user?.email, updatedOrder).catch((e) => {
-      console.log("Email error:", e.message);
-    });
+    sendOrderStatusEmail(user?.email, updatedOrder).catch(() => {});
   });
 
   return updatedOrder;
@@ -172,9 +170,18 @@ const cancelOrderService = async (orderId, user) => {
     throw new Error("Order cannot be cancelled")
   }
 
-  // restore stock
+  // ✅ FETCH ALL PRODUCTS AT ONCE
+  const productIds = order.items.map(i => i.productId)
+
+  const products = await Product.find({ _id: { $in: productIds } })
+
+  const productMap = {}
+  products.forEach(p => {
+    productMap[p._id.toString()] = p
+  })
+
   for (const item of order.items) {
-    const product = await Product.findById(item.productId)
+    const product = productMap[item.productId.toString()]
 
     if (product) {
       const variant = product.variants.id(item.variantId)
@@ -182,17 +189,22 @@ const cancelOrderService = async (orderId, user) => {
       if (variant) {
         variant.stock += item.qty
         product.totalStock += item.qty
-        await product.save()
       }
     }
   }
+
+  // ✅ SAVE ALL PRODUCTS PARALLEL
+  await Promise.all(products.map(p => p.save()))
 
   order.status = "cancelled"
   await order.save()
 
   const userData = await User.findById(order.userId)
 
-  await sendOrderStatusEmail(userData.email, order)
+  // ✅ NON-BLOCKING EMAIL
+  setImmediate(() => {
+    sendOrderStatusEmail(userData.email, order).catch(() => {});
+  });
 
   return order
 };
@@ -204,3 +216,5 @@ module.exports = {
   updateOrderStatusService,
   cancelOrderService
 };
+
+
