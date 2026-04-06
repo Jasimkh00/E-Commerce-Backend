@@ -26,7 +26,7 @@ router.post(
     "/createProduct",
     protect,
     adminOnly,
-    uploads.array("images", 5), // Add Multer 
+    // uploads.array("images", 5), // Add Multer 
     productController.createProduct
 );
 router.put("/updateProduct/:id", protect, adminOnly, productController.updateProduct);

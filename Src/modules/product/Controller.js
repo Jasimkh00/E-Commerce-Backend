@@ -11,9 +11,12 @@ exports.createProduct = async (req, res) => {
       product
     });
   } catch (err) {
-    res.status(400).json({
+    console.error("🔥 ERROR:", err); // 👈 ADD THIS
+
+    res.status(500).json({
       success: false,
-      message: err.message
+      message: err.message,
+      stack: err.stack // 👈 ADD THIS
     });
   }
 };
