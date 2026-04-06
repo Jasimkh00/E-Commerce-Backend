@@ -10,7 +10,7 @@ const createProductService = async (body = {}, files = []) => {
     throw new Error("Title and category required");
   }
 
-  // Parse variants if string
+  // Parse variants
   if (typeof variants === "string") {
     try {
       variants = JSON.parse(variants);
@@ -46,7 +46,12 @@ const createProductService = async (body = {}, files = []) => {
   const exists = await Product.exists({ title, categoryId });
   if (exists) throw new Error("Product already exists");
 
-  const images = files.length > 0 ? files.map(f => `/uploads/${f.filename}`) : [];
+  // ✅ FIX: Proper image URL
+  const baseUrl = process.env.BASE_URL || "";
+
+  const images = files.length > 0
+    ? files.map(f => `${baseUrl}/uploads/${f.filename}`)
+    : [];
 
   return await Product.create({
     title,
@@ -58,7 +63,6 @@ const createProductService = async (body = {}, files = []) => {
     isNewArrival
   });
 };
-
 
 
 
