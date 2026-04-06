@@ -1,3 +1,4 @@
+// Require :
 const crypto = require('crypto');
 const User = require('../../../Src/modules/auth/Model');
 const bcrypt = require('bcryptjs');
@@ -145,7 +146,7 @@ const forgotPasswordService = async (email) => {
 
     await user.save();
 
-    const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.BASE_URL}/reset-password/${resetToken}`;
 
     await transporter.sendMail({
         from: process.env.EMAIL_USER,

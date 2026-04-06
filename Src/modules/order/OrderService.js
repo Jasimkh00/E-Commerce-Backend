@@ -1,3 +1,4 @@
+// Require :
 const Order = require("../../../Src/modules/order/Model");
 const Cart = require("../../../Src/modules/cart/Model");
 const Product = require("../../../Src/modules/product/Model");
@@ -86,7 +87,7 @@ const placeOrderService = async (userId, body) => {
   const deliveryDate = new Date()
   deliveryDate.setDate(deliveryDate.getDate() + 5)
 
-  // ✅ NON-BLOCKING EMAIL (FIXED)
+  // NON-BLOCKING EMAIL (FIXED)
   setImmediate(() => {
     sendOrderPlacedEmail(
       user.email,
@@ -126,7 +127,7 @@ const updateOrderStatusService = async (orderId, status) => {
     throw new Error("Invalid order status");
   }
 
-  // ✅ DIRECT UPDATE (single DB call)
+  //  DIRECT UPDATE (single DB call)
   const updatedOrder = await Order.findByIdAndUpdate(
     orderId,
     { status },
@@ -137,10 +138,10 @@ const updateOrderStatusService = async (orderId, status) => {
     throw new Error("Order not found");
   }
 
-  // ✅ USER FETCH
+  // USER FETCH
   const user = await User.findById(updatedOrder.userId).lean();
 
-  // ✅ NON-BLOCKING EMAIL
+  // NON-BLOCKING EMAIL
   setImmediate(() => {
     sendOrderStatusEmail(user?.email, updatedOrder).catch(() => {});
   });
@@ -170,11 +171,11 @@ const cancelOrderService = async (orderId, user) => {
     throw new Error("Order cannot be cancelled")
   }
 
-  // ✅ STEP 1: IMMEDIATE STATUS UPDATE (FAST RESPONSE)
+  //  IMMEDIATE STATUS UPDATE (FAST RESPONSE)
   order.status = "cancelled"
   await order.save()
 
-  // ✅ STEP 2: BACKGROUND WORK (NON-BLOCKING)
+  //  BACKGROUND WORK (NON-BLOCKING)
   setImmediate(async () => {
     try {
 
@@ -214,6 +215,7 @@ const cancelOrderService = async (orderId, user) => {
   return order
 };
 
+// Export Modules :
 module.exports = {
   placeOrderService,
   getMyOrdersService,

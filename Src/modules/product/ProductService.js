@@ -188,6 +188,7 @@ const deactivateProductService = async (id) => {
   return true;
 };
 
+// Export Module :
 module.exports = {
   createProductService,
   getProductsService,
