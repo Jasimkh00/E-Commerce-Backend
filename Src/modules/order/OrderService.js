@@ -1,16 +1,14 @@
-// Require Models :
 const Order = require("../../../Src/modules/order/Model");
 const Cart = require("../../../Src/modules/cart/Model");
 const Product = require("../../../Src/modules/product/Model");
 const User = require("../../../Src/modules/auth/Model");
 
-// Email Service :
 const {
   sendOrderPlacedEmail,
   sendOrderStatusEmail
 } = require("../../../Src/Utils/emailOrderService");
 
-// Generate Order Number :
+// Generate Order Number
 const generateOrderNumber = () => {
   const date = new Date()
 
@@ -23,7 +21,7 @@ const generateOrderNumber = () => {
   return `ORD-${y}${m}${d}-${random}`
 };
 
-// Logic For Order Place :
+// PLACE ORDER
 const placeOrderService = async (userId, body) => {
 
   const { shippingAddress, paymentMethod } = body
@@ -55,7 +53,7 @@ const placeOrderService = async (userId, body) => {
       throw new Error(`Insufficient stock for ${item.titleSnapshot}`)
     }
 
-    // Logci For Stock update :
+    // stock update
     variant.stock -= item.qty
     product.totalSold += item.qty
     product.totalStock -= item.qty
@@ -88,16 +86,16 @@ const placeOrderService = async (userId, body) => {
   const deliveryDate = new Date()
   deliveryDate.setDate(deliveryDate.getDate() + 5)
 
-  // Email
-  try {
-    await sendOrderPlacedEmail(
+  // ✅ NON-BLOCKING EMAIL (FIXED)
+  setImmediate(() => {
+    sendOrderPlacedEmail(
       user.email,
       order,
       deliveryDate.toDateString()
-    );
-  } catch (e) {
-    console.log("Email error", e.message);
-  }
+    ).catch((e) => {
+      console.log("Email error:", e.message);
+    });
+  });
 
   cart.items = []
   await cart.save()
@@ -105,20 +103,19 @@ const placeOrderService = async (userId, body) => {
   return order
 };
 
-// Logci For Get Orders :
+// GET MY ORDERS
 const getMyOrdersService = async (userId) => {
   return await Order.find({ userId }).sort("-createdAt")
 };
 
-// Logci For Get All Orders :
+// GET ALL ORDERS
 const getAllOrdersService = async () => {
   return await Order.find()
     .populate("userId", "fullName email")
     .sort("-createdAt")
 };
 
-
-// Logic For Update Status :
+// UPDATE STATUS
 const updateOrderStatusService = async (orderId, status) => {
   const allowedStatus = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
 
@@ -126,24 +123,21 @@ const updateOrderStatusService = async (orderId, status) => {
     throw new Error("Invalid order status");
   }
 
-  // 🔥 LEAN QUERY (fast read)
   const order = await Order.findById(orderId).lean();
 
   if (!order) {
     throw new Error("Order not found");
   }
 
-  // 🔥 Update using direct DB query (NO save())
   const updatedOrder = await Order.findByIdAndUpdate(
     orderId,
     { status },
     { new: true }
   ).lean();
 
-  // 🔥 lean user fetch
   const user = await User.findById(order.userId).lean();
 
-  // ⚡ NON-BLOCKING EMAIL (VERY IMPORTANT)
+  // already non-blocking
   setImmediate(() => {
     sendOrderStatusEmail(user?.email, updatedOrder).catch((e) => {
       console.log("Email error:", e.message);
@@ -153,7 +147,7 @@ const updateOrderStatusService = async (orderId, status) => {
   return updatedOrder;
 };
 
-// Logic For Cancel Order :
+// CANCEL ORDER
 const cancelOrderService = async (orderId, user) => {
 
   const order = await Order.findById(orderId)
@@ -194,12 +188,12 @@ const cancelOrderService = async (orderId, user) => {
   await order.save()
 
   const userData = await User.findById(order.userId)
+
   await sendOrderStatusEmail(userData.email, order)
 
   return order
 };
 
-// Export Modules :
 module.exports = {
   placeOrderService,
   getMyOrdersService,
