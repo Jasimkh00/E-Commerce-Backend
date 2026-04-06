@@ -4,7 +4,7 @@ const service = require("../../../Src/modules/product/ProductService");
 // CREATE
 exports.createProduct = async (req, res) => {
   try {
-    const product = await service.createProductService(req.body, req.files);
+    const product = await service.createProductService(req.body || {}, req.files || []);
 
     res.status(201).json({
       success: true,

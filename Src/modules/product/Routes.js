@@ -26,12 +26,12 @@ router.post(
     "/createProduct",
     protect,
     adminOnly,
-    // uploads.array("images", 5), // Add Multer 
+    uploads.array("images", 5), // Add Multer 
     productController.createProduct
 );
 router.put("/updateProduct/:id", protect, adminOnly, productController.updateProduct);
 router.patch("/deactivateProduct/:id", protect, adminOnly, productController.deactivateProduct);
-router.patch("/updateProductStock/:varientid", protect, adminOnly, productController.updateProductStock);
+router.patch("/updateProductStock/:id", protect, adminOnly, productController.updateProductStock);
 
 
 // Export Module :

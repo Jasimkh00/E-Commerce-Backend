@@ -18,6 +18,7 @@ const app = express();
 
 // Middleware For Json (Used To Convert Json String Into Js Object) :
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 
 // Import Routes :

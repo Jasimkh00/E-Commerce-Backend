@@ -4,7 +4,14 @@ const Category = require("../../../Src/modules/category/Model");
 
 // CREATE PRODUCT
 const createProductService = async (body, files) => {
-  let { title, description, categoryId, variants, tags, isNewArrival } = body;
+  let {
+  title,
+  description,
+  categoryId,
+  variants,
+  tags,
+  isNewArrival
+} = body || {};
 
   if (!title || !categoryId) {
     throw new Error("Title and category required");
@@ -65,6 +72,8 @@ const createProductService = async (body, files) => {
     tags,
     isNewArrival
   });
+  console.log("BODY:", req.body);
+console.log("FILES:", req.files);
 };
 
 
