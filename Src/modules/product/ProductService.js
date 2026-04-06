@@ -6,14 +6,16 @@ const Category = require("../../../Src/modules/category/Model");
 const createProductService = async (body, files) => {
   let { title, description, categoryId, variants, tags, isNewArrival } = body;
 
-  if (!title || !categoryId) throw new Error("Title and category required");
+  if (!title || !categoryId) {
+    throw new Error("Title and category required");
+  }
 
-  // ✅ FIX: variants parse
+  // ✅ SAFE PARSE VARIANTS
   if (typeof variants === "string") {
     try {
       variants = JSON.parse(variants);
     } catch (e) {
-      throw new Error("Invalid variants JSON");
+      throw new Error("Variants must be valid JSON");
     }
   }
 
@@ -21,22 +23,38 @@ const createProductService = async (body, files) => {
     throw new Error("At least one variant required");
   }
 
-  // ✅ FIX: tags parse
+  // ✅ VALIDATE VARIANTS
+  variants = variants.map((v) => ({
+    color: v.color || "",
+    size: v.size || "",
+    price: Number(v.price) || 0,
+    discountType: v.discountType || null,
+    discountValue: Number(v.discountValue) || 0,
+    stock: Number(v.stock) || 0
+  }));
+
+  // ✅ FIX TAGS
   if (typeof tags === "string") {
     tags = tags.split(",").map(t => t.trim());
+  } else {
+    tags = [];
   }
 
-  // ✅ FIX: boolean convert
+  // ✅ BOOLEAN FIX
   isNewArrival = isNewArrival === "true" || isNewArrival === true;
 
-  const category = await Category.findById(categoryId).lean();
+  // ✅ CATEGORY CHECK
+  const category = await Category.findById(categoryId);
   if (!category) throw new Error("Invalid category");
 
+  // ✅ DUPLICATE CHECK
   const exists = await Product.exists({ title, categoryId });
   if (exists) throw new Error("Product already exists");
 
-  // ✅ images fix
-  const images = files?.map(file => `/uploads/${file.filename}`) || [];
+  // ✅ IMAGES SAFE
+  const images = files && files.length > 0
+    ? files.map(file => `/uploads/${file.filename}`)
+    : [];
 
   return await Product.create({
     title,
@@ -50,7 +68,8 @@ const createProductService = async (body, files) => {
 };
 
 
-// GET ALL PRODUCTS (✅ VARIANTS FIXED)
+
+// GET ALL PRODUCTS
 const getProductsService = async (query) => {
   const {
     page = 1,
@@ -71,7 +90,7 @@ const getProductsService = async (query) => {
   const skip = (page - 1) * limit;
 
   const products = await Product.find(filter)
-    .select("title images totalStock categoryId createdAt variants") // ✅ FIX
+    .select("title images totalStock categoryId createdAt variants")
     .populate("categoryId", "name")
     .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
     .skip(skip)
@@ -92,6 +111,7 @@ const getProductsService = async (query) => {
 };
 
 
+
 // SINGLE PRODUCT
 const getSingleProductService = async (slug) => {
   const product = await Product.findOne({ slug, isActive: true })
@@ -104,20 +124,36 @@ const getSingleProductService = async (slug) => {
 };
 
 
+
 // UPDATE PRODUCT
 const updateProductService = async (id, body) => {
   const product = await Product.findById(id);
   if (!product) throw new Error("Product not found");
 
+  // ✅ SAFE VARIANTS PARSE
+  if (body.variants && typeof body.variants === "string") {
+    try {
+      body.variants = JSON.parse(body.variants);
+    } catch (e) {
+      throw new Error("Variants must be valid JSON");
+    }
+  }
+
+  // ✅ UPDATE FIELDS
   Object.assign(product, body);
 
-  if (body.variants) {
-    product.totalStock = body.variants.reduce((sum, v) => sum + v.stock, 0);
+  // ✅ RECALCULATE STOCK
+  if (body.variants && Array.isArray(body.variants)) {
+    product.totalStock = body.variants.reduce(
+      (sum, v) => sum + (Number(v.stock) || 0),
+      0
+    );
   }
 
   await product.save();
   return product;
 };
+
 
 
 // UPDATE STOCK
@@ -128,13 +164,17 @@ const updateProductStockService = async (id, body) => {
   const variant = product.variants.id(body.variantId);
   if (!variant) throw new Error("Variant not found");
 
-  variant.stock = body.stock;
+  variant.stock = Number(body.stock) || 0;
 
-  product.totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
+  product.totalStock = product.variants.reduce(
+    (sum, v) => sum + (Number(v.stock) || 0),
+    0
+  );
 
   await product.save();
   return product;
 };
+
 
 
 // NEW ARRIVALS
@@ -146,6 +186,7 @@ const getNewArrivalsService = async () => {
 };
 
 
+
 // BEST SELLING
 const getBestSellingService = async () => {
   return await Product.find({ isActive: true })
@@ -155,6 +196,7 @@ const getBestSellingService = async () => {
 };
 
 
+
 // TOP RATED
 const getTopRatedService = async () => {
   return await Product.find({ isActive: true })
@@ -162,6 +204,7 @@ const getTopRatedService = async () => {
     .limit(10)
     .lean();
 };
+
 
 
 // DEACTIVATE
@@ -174,7 +217,9 @@ const deactivateProductService = async (id) => {
   return true;
 };
 
-// Export Modules :
+
+
+// EXPORT
 module.exports = {
   createProductService,
   getProductsService,
