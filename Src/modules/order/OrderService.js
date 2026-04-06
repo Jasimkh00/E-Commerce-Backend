@@ -105,14 +105,17 @@ const placeOrderService = async (userId, body) => {
 
 // GET MY ORDERS
 const getMyOrdersService = async (userId) => {
-  return await Order.find({ userId }).sort("-createdAt")
+  return await Order.find({
+    userId,
+    status: { $ne: "cancelled" } 
+  }).sort("-createdAt");
 };
 
-// GET ALL ORDERS
+// Get All Orders Service :
 const getAllOrdersService = async () => {
-  return await Order.find()
+  return await Order.find({ status: { $ne: "cancelled" } }) 
     .populate("userId", "fullName email")
-    .sort("-createdAt")
+    .sort("-createdAt");
 };
 
 // UPDATE STATUS
