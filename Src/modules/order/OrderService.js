@@ -170,41 +170,46 @@ const cancelOrderService = async (orderId, user) => {
     throw new Error("Order cannot be cancelled")
   }
 
-  // ✅ FETCH ALL PRODUCTS AT ONCE
-  const productIds = order.items.map(i => i.productId)
-
-  const products = await Product.find({ _id: { $in: productIds } })
-
-  const productMap = {}
-  products.forEach(p => {
-    productMap[p._id.toString()] = p
-  })
-
-  for (const item of order.items) {
-    const product = productMap[item.productId.toString()]
-
-    if (product) {
-      const variant = product.variants.id(item.variantId)
-
-      if (variant) {
-        variant.stock += item.qty
-        product.totalStock += item.qty
-      }
-    }
-  }
-
-  // ✅ SAVE ALL PRODUCTS PARALLEL
-  await Promise.all(products.map(p => p.save()))
-
+  // ✅ STEP 1: IMMEDIATE STATUS UPDATE (FAST RESPONSE)
   order.status = "cancelled"
   await order.save()
 
-  const userData = await User.findById(order.userId)
+  // ✅ STEP 2: BACKGROUND WORK (NON-BLOCKING)
+  setImmediate(async () => {
+    try {
 
-  // ✅ NON-BLOCKING EMAIL
-  setImmediate(() => {
-    sendOrderStatusEmail(userData.email, order).catch(() => {});
-  });
+      const productIds = order.items.map(i => i.productId)
+
+      const products = await Product.find({ _id: { $in: productIds } })
+
+      const productMap = {}
+      products.forEach(p => {
+        productMap[p._id.toString()] = p
+      })
+
+      for (const item of order.items) {
+        const product = productMap[item.productId.toString()]
+
+        if (product) {
+          const variant = product.variants.id(item.variantId)
+
+          if (variant) {
+            variant.stock += item.qty
+            product.totalStock += item.qty
+          }
+        }
+      }
+
+      await Promise.all(products.map(p => p.save()))
+
+      const userData = await User.findById(order.userId)
+
+      await sendOrderStatusEmail(userData.email, order)
+
+    } catch (e) {
+      console.log("Cancel background error:", e.message)
+    }
+  })
 
   return order
 };
