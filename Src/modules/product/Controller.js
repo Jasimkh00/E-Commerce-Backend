@@ -1,32 +1,27 @@
-// Require Product Service :
 const service = require("../../../Src/modules/product/ProductService");
 
-// CREATE
+// CREATE PRODUCT
 exports.createProduct = async (req, res) => {
   try {
-    const body = req.body || {};
-    const files = req.files || [];
-
-    console.log("REQ BODY:", body);      // ✅ Debug body
-    console.log("REQ FILES:", files);    // ✅ Debug files
-
-    const product = await service.createProductService(body, files);
+    const product = await service.createProductService(
+      req.body,
+      req.files || []
+    );
 
     res.status(201).json({
       success: true,
       product
     });
   } catch (err) {
-    console.error("🔥 CREATE PRODUCT ERROR:", err); // ✅ Full error in console
+    console.error("CREATE PRODUCT ERROR:", err);
     res.status(500).json({
       success: false,
-      message: err.message,
-      stack: err.stack
+      message: err.message
     });
   }
 };
 
-// GET ALL
+// GET ALL PRODUCTS
 exports.getProducts = async (req, res) => {
   try {
     const result = await service.getProductsService(req.query);
@@ -36,31 +31,48 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-// SINGLE
+// GET SINGLE PRODUCT
 exports.getSingleProduct = async (req, res) => {
   try {
     const data = await service.getSingleProductService(req.params.slug);
-    res.status(200).json({ data });
+    res.status(200).json(data);
   } catch (e) {
     res.status(404).json({ message: e.message });
   }
 };
 
-// UPDATE
+// UPDATE PRODUCT
 exports.updateProduct = async (req, res) => {
   try {
-    const data = await service.updateProductService(req.params.id, req.body);
-    res.status(200).json({ message: "Updated", data });
+    const data = await service.updateProductService(
+      req.params.id,
+      req.body,
+      req.files || []
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Updated",
+      data
+    });
   } catch (e) {
     res.status(400).json({ message: e.message });
   }
 };
 
-// STOCK
+// UPDATE STOCK
 exports.updateProductStock = async (req, res) => {
   try {
-    const data = await service.updateProductStockService(req.params.id, req.body);
-    res.status(200).json({ message: "Stock updated", data });
+    const data = await service.updateProductStockService(
+      req.params.id,
+      req.body
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Stock updated",
+      data
+    });
   } catch (e) {
     res.status(400).json({ message: e.message });
   }
@@ -96,13 +108,16 @@ exports.getTopRated = async (req, res) => {
   }
 };
 
-// DEACTIVATE
+// DEACTIVATE PRODUCT
 exports.deactivateProduct = async (req, res) => {
   try {
     await service.deactivateProductService(req.params.id);
-    res.status(200).json({ message: "Deactivated" });
+
+    res.status(200).json({
+      success: true,
+      message: "Product deactivated"
+    });
   } catch (e) {
     res.status(404).json({ message: e.message });
   }
 };
-

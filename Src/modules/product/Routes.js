@@ -22,7 +22,13 @@ router.post(
   productController.createProduct
 );
 
-router.put("/updateProduct/:id", protect, adminOnly, productController.updateProduct);
+router.put(
+  "/updateProduct/:id",
+  protect,
+  adminOnly,
+  uploads.array("images", 5),
+  productController.updateProduct
+);
 router.patch("/deactivateProduct/:id", protect, adminOnly, productController.deactivateProduct);
 router.patch("/updateProductStock/:id", protect, adminOnly, productController.updateProductStock);
 

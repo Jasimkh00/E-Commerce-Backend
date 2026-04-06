@@ -1,4 +1,3 @@
-// Require Product And Category Models :
 const Product = require("../../../Src/modules/product/Model");
 const Category = require("../../../Src/modules/category/Model");
 
@@ -46,7 +45,6 @@ const createProductService = async (body = {}, files = []) => {
   const exists = await Product.exists({ title, categoryId });
   if (exists) throw new Error("Product already exists");
 
-  // ✅ FIX: Proper image URL
   const baseUrl = process.env.BASE_URL || "";
 
   const images = files.length > 0
@@ -63,8 +61,6 @@ const createProductService = async (body = {}, files = []) => {
     isNewArrival
   });
 };
-
-
 
 // GET ALL PRODUCTS
 const getProductsService = async (query) => {
@@ -102,12 +98,10 @@ const getProductsService = async (query) => {
       page: Number(page),
       limit: Number(limit),
       total,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / Number(limit))
     }
   };
 };
-
-
 
 // SINGLE PRODUCT
 const getSingleProductService = async (slug) => {
@@ -120,14 +114,11 @@ const getSingleProductService = async (slug) => {
   return product;
 };
 
-
-
 // UPDATE PRODUCT
-const updateProductService = async (id, body) => {
+const updateProductService = async (id, body, files = []) => {
   const product = await Product.findById(id);
   if (!product) throw new Error("Product not found");
 
-  // ✅ SAFE VARIANTS PARSE
   if (body.variants && typeof body.variants === "string") {
     try {
       body.variants = JSON.parse(body.variants);
@@ -136,22 +127,16 @@ const updateProductService = async (id, body) => {
     }
   }
 
-  // ✅ UPDATE FIELDS
-  Object.assign(product, body);
-
-  // ✅ RECALCULATE STOCK
-  if (body.variants && Array.isArray(body.variants)) {
-    product.totalStock = body.variants.reduce(
-      (sum, v) => sum + (Number(v.stock) || 0),
-      0
-    );
+  if (files.length > 0) {
+    const baseUrl = process.env.BASE_URL || "";
+    body.images = files.map(f => `${baseUrl}/uploads/${f.filename}`);
   }
+
+  Object.assign(product, body);
 
   await product.save();
   return product;
 };
-
-
 
 // UPDATE STOCK
 const updateProductStockService = async (id, body) => {
@@ -172,9 +157,7 @@ const updateProductStockService = async (id, body) => {
   return product;
 };
 
-
-
-// NEW ARRIVALS
+// OTHER SERVICES
 const getNewArrivalsService = async () => {
   return await Product.find({ isActive: true, isNewArrival: true })
     .sort("-createdAt")
@@ -182,9 +165,6 @@ const getNewArrivalsService = async () => {
     .lean();
 };
 
-
-
-// BEST SELLING
 const getBestSellingService = async () => {
   return await Product.find({ isActive: true })
     .sort("-totalSold")
@@ -192,9 +172,6 @@ const getBestSellingService = async () => {
     .lean();
 };
 
-
-
-// TOP RATED
 const getTopRatedService = async () => {
   return await Product.find({ isActive: true })
     .sort("-averageRating")
@@ -202,9 +179,6 @@ const getTopRatedService = async () => {
     .lean();
 };
 
-
-
-// DEACTIVATE
 const deactivateProductService = async (id) => {
   const product = await Product.findById(id);
   if (!product) throw new Error("Product not found");
@@ -214,9 +188,6 @@ const deactivateProductService = async (id) => {
   return true;
 };
 
-
-
-// EXPORT
 module.exports = {
   createProductService,
   getProductsService,
