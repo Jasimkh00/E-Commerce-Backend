@@ -3,21 +3,14 @@ const Product = require("../../../Src/modules/product/Model");
 const Category = require("../../../Src/modules/category/Model");
 
 // CREATE PRODUCT
-const createProductService = async (body, files) => {
-  let {
-  title,
-  description,
-  categoryId,
-  variants,
-  tags,
-  isNewArrival
-} = body || {};
+const createProductService = async (body = {}, files = []) => {
+  let { title, description, categoryId, variants, tags, isNewArrival } = body;
 
   if (!title || !categoryId) {
     throw new Error("Title and category required");
   }
 
-  // ✅ SAFE PARSE VARIANTS
+  // Parse variants if string
   if (typeof variants === "string") {
     try {
       variants = JSON.parse(variants);
@@ -30,7 +23,6 @@ const createProductService = async (body, files) => {
     throw new Error("At least one variant required");
   }
 
-  // ✅ VALIDATE VARIANTS
   variants = variants.map((v) => ({
     color: v.color || "",
     size: v.size || "",
@@ -40,28 +32,21 @@ const createProductService = async (body, files) => {
     stock: Number(v.stock) || 0
   }));
 
-  // ✅ FIX TAGS
   if (typeof tags === "string") {
     tags = tags.split(",").map(t => t.trim());
   } else {
     tags = [];
   }
 
-  // ✅ BOOLEAN FIX
   isNewArrival = isNewArrival === "true" || isNewArrival === true;
 
-  // ✅ CATEGORY CHECK
   const category = await Category.findById(categoryId);
   if (!category) throw new Error("Invalid category");
 
-  // ✅ DUPLICATE CHECK
   const exists = await Product.exists({ title, categoryId });
   if (exists) throw new Error("Product already exists");
 
-  // ✅ IMAGES SAFE
-  const images = files && files.length > 0
-    ? files.map(file => `/uploads/${file.filename}`)
-    : [];
+  const images = files.length > 0 ? files.map(f => `/uploads/${f.filename}`) : [];
 
   return await Product.create({
     title,
@@ -72,9 +57,8 @@ const createProductService = async (body, files) => {
     tags,
     isNewArrival
   });
-  console.log("BODY:", req.body);
-console.log("FILES:", req.files);
 };
+
 
 
 

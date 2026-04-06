@@ -1,38 +1,29 @@
-// Require Express :
 const express = require("express");
 const router = express.Router();
 
-// Require Upload Images :
-const uploads = require('../../../Src/Utils/uploadImages');
-
-// Require Product Controller :
+const uploads = require("../../../Src/Utils/uploadImages");
 const productController = require("../../../Src/modules/product/Controller");
-
-// Require Protect And Admin Middleware :
 const { protect } = require("../../../Src/modules/auth/AuthMiddleware");
-const { adminOnly } = require('../../../Src/modules/auth/AdminMiddleware');
+const { adminOnly } = require("../../../Src/modules/auth/AdminMiddleware");
 
-
-// For Public :
+// Public
 router.get("/getAllProducts", protect, productController.getProducts);
 router.get("/getSingleProduct/:slug", protect, productController.getSingleProduct);
 router.get("/new-arrivals", protect, productController.getNewArrivals);
 router.get("/best-selling", protect, productController.getBestSelling);
 router.get("/top-rated", protect, productController.getTopRated);
 
-
-// For Admin :
+// Admin
 router.post(
-    "/createProduct",
-    protect,
-    adminOnly,
-    uploads.array("images", 5), // Add Multer 
-    productController.createProduct
+  "/createProduct",
+  protect,
+  adminOnly,
+  uploads.array("images", 5), // Multer middleware
+  productController.createProduct
 );
+
 router.put("/updateProduct/:id", protect, adminOnly, productController.updateProduct);
 router.patch("/deactivateProduct/:id", protect, adminOnly, productController.deactivateProduct);
 router.patch("/updateProductStock/:id", protect, adminOnly, productController.updateProductStock);
 
-
-// Export Module :
 module.exports = router;
