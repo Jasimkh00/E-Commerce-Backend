@@ -18,7 +18,7 @@ const { adminOnly } = require("../../../Src/modules/auth/AdminMiddleware");
 // For Public :
 router.post("/placeOrder", protect, placeOrder);
 router.get("/my-orders", protect, getMyOrders);
-router.patch("/cancel/:orderId", protect, cancelOrder);
+router.delete("/cancel/:orderId", protect, cancelOrder);
 
 
 // For Admin :
