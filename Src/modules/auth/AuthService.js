@@ -148,11 +148,14 @@ const forgotPasswordService = async (email) => {
 
     const resetUrl = `${process.env.BASE_URL}/reset-password/${resetToken}`;
 
-    await transporter.sendMail({
+    // Send email WITHOUT blocking response
+    transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: user.email,
         subject: "Password Reset Request",
         text: `Click the link to reset your password: ${resetUrl}`,
+    }).catch(err => {
+        console.log("Email error:", err.message);
     });
 
     return "Reset link sent to your email";
