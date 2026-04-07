@@ -157,7 +157,7 @@ const updateProductStockService = async (id, body) => {
   return product;
 };
 
-// OTHER SERVICES
+// Get New Arrivals :
 const getNewArrivalsService = async () => {
   return await Product.find({ isActive: true, isNewArrival: true })
     .sort("-createdAt")
@@ -165,6 +165,7 @@ const getNewArrivalsService = async () => {
     .lean();
 };
 
+// Best Selling Products :
 const getBestSellingService = async () => {
   return await Product.find({ isActive: true })
     .sort("-totalSold")
@@ -172,6 +173,7 @@ const getBestSellingService = async () => {
     .lean();
 };
 
+// To Rated Products :
 const getTopRatedService = async () => {
   return await Product.find({ isActive: true })
     .sort("-averageRating")
@@ -179,12 +181,27 @@ const getTopRatedService = async () => {
     .lean();
 };
 
+// Deactivate :
 const deactivateProductService = async (id) => {
   const product = await Product.findById(id);
   if (!product) throw new Error("Product not found");
 
   product.isActive = false;
   await product.save();
+  return true;
+};
+
+
+// DELETE PRODUCT :
+const deleteProductService = async (id) => {
+  const product = await Product.findById(id);
+
+  if (!product) {
+    throw new Error("Product not found");
+  }
+
+  await Product.findByIdAndDelete(id);
+
   return true;
 };
 
@@ -198,5 +215,6 @@ module.exports = {
   getNewArrivalsService,
   getBestSellingService,
   getTopRatedService,
-  deactivateProductService
+  deactivateProductService,
+  deleteProductService
 };

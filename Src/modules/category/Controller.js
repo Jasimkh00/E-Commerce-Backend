@@ -78,11 +78,26 @@ const deactivateCategory = async (req, res) => {
   }
 };
 
+// Delete 
+const deleteCategory = async (req, res) => {
+  try {
+    await categoryService.deleteCategoryService(req.params.id);
+
+    res.status(200).json({
+      message: "Category deleted permanently"
+    });
+
+  } catch (error) {
+    res.status(404).json({ message: error.message });
+  }
+};
+
 // Export Module :
 module.exports = {
   createCategory,
   getCategories,
   getCategoryById,
   updateCategory,
-  deactivateCategory
+  deactivateCategory,
+  deleteCategory
 };

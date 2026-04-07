@@ -17,6 +17,7 @@ router.get("/getSingle/:id",protect,categoryController.getCategoryById);
 router.post("/createCategory", protect,adminOnly, categoryController.createCategory);
 router.put("/updateCategory/:id", protect,adminOnly, categoryController.updateCategory);
 router.patch("/DeactivateCategory/:id", protect,adminOnly, categoryController.deactivateCategory);
+router.delete("/deleteCategory/:id",protect,adminOnly,categoryController.deleteCategory);
 
 // Export Module :
 module.exports = router;

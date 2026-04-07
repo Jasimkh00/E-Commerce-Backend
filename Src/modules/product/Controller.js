@@ -121,3 +121,18 @@ exports.deactivateProduct = async (req, res) => {
     res.status(404).json({ message: e.message });
   }
 };
+
+
+// DELETE PRODUCT
+exports.deleteProduct = async (req, res) => {
+  try {
+    await service.deleteProductService(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Product deleted permanently"
+    });
+  } catch (e) {
+    res.status(404).json({ message: e.message });
+  }
+};

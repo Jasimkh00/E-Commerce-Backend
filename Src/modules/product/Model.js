@@ -135,9 +135,9 @@ const productSchema = new mongoose.Schema(
 // Pre Save Hook (Middleware) :
 productSchema.pre("save", async function () {
 
-  // -----------------------------
+  
   // SLUG GENERATION (CATEGORY STYLE)
-  // -----------------------------
+  
   if (this.isModified("title") && this.title) {
 
     let slug = slugify(this.title, { lower: true, strict: true });
@@ -156,9 +156,9 @@ productSchema.pre("save", async function () {
     this.slug = slug;
   }
 
-  // -----------------------------
-  // VARIANT PRICE + STOCK CALCULATION
-  // -----------------------------
+  
+  // VARIANT PRICE And STOCK CALCULATION
+  
   if (Array.isArray(this.variants) && this.variants.length > 0) {
 
     let totalStock = 0;

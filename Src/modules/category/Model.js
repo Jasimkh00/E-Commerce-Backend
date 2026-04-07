@@ -15,7 +15,7 @@ const categorySchema = new mongoose.Schema(
     // For Slug :
     slug: {
       type: String,
-      unique: true
+      
     },
 
     // For Child Category :
@@ -46,15 +46,6 @@ categorySchema.pre("save", async function () {
     let slug = slugify(this.name, { lower: true, strict: true })
 
     const Category = mongoose.model("Category")
-
-    let existing = await Category.findOne({
-      slug,
-      _id: { $ne: this._id }
-    });
-
-    if (existing) {
-      slug = slug + "-" + Date.now()
-    }
 
     if (this.parentCategory) {
 

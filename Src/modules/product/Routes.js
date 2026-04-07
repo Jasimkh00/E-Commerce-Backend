@@ -29,7 +29,10 @@ router.put(
   uploads.array("images", 5),
   productController.updateProduct
 );
+
 router.patch("/deactivateProduct/:id", protect, adminOnly, productController.deactivateProduct);
 router.patch("/updateProductStock/:id", protect, adminOnly, productController.updateProductStock);
+router.delete("/deleteProduct/:id", protect, adminOnly, productController.deleteProduct);
 
+// Export Module :
 module.exports = router;

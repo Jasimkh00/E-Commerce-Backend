@@ -114,11 +114,26 @@ const deactivateCategoryService = async (id) => {
   return;
 };
 
+// Delete 
+const deleteCategoryService = async (id) => {
+
+  const category = await Category.findById(id);
+
+  if (!category) {
+    throw new Error("Category not found");
+  }
+
+  await Category.findByIdAndDelete(id);
+
+  return;
+};
+
 // Export Module :
 module.exports = {
   createCategoryService,
   getCategoriesService,
   getCategoryByIdService,
   updateCategoryService,
-  deactivateCategoryService
+  deactivateCategoryService,
+  deleteCategoryService
 };
