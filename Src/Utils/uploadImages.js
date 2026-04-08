@@ -1,4 +1,4 @@
-// Require :
+// Require Multer And Fs :
 const multer = require("multer");
 const fs = require("fs");
 
@@ -11,16 +11,25 @@ const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploads/");
   },
+
   filename: function (req, file, cb) {
-    const name = Date.now() + "-" + file.originalname.replace(/\s/g, "");
+
+    // ONLY CHANGE HERE (FIX OVERWRITE BUG)
+    const name =
+      Date.now() +
+      "-" +
+      Math.round(Math.random() * 1e9) +
+      "-" +
+      file.originalname.replace(/\s/g, "");
+
     cb(null, name);
   }
 });
 
-// NO LIMITS HERE
+// NO OTHER CHANGE
 const upload = multer({
   storage
 });
 
-// Export Module :
+// Export Module:
 module.exports = upload;
