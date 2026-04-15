@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const uploads = require("../../../Src/Utils/uploadImages");
+const uploads = require("../../../Src/uploads/multer");
 const productController = require("../../../Src/modules/product/Controller");
 const { protect } = require("../../../Src/modules/auth/AuthMiddleware");
 const { adminOnly } = require("../../../Src/modules/auth/AdminMiddleware");
