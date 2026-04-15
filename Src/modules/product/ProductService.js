@@ -41,16 +41,16 @@ const createProductService = async (body = {}, files = []) => {
 
   const category = await Category.findById(categoryId);
   if (!category) throw new Error("Invalid category");
-  
-const baseUrl = process.env.BASE_URL || "https://munoapi.brainexworld.com";
 
-const safeBaseUrl =
-  baseUrl.startsWith("http")
-    ? baseUrl
-    : `https://${baseUrl}`;
+const baseUrl = process.env.BASE_URL.startsWith("http")
+  ? process.env.BASE_URL
+  : `https://${process.env.BASE_URL}`;
+
+console.log("BASE_URL =", baseUrl);
+
 
 const images = files.length > 0
-  ? files.map(f => `${safeBaseUrl}/uploads/${f.filename}`)
+  ? files.map(f => `${baseUrl}/uploads/${f.filename}`)
   : [];
 
   return await Product.create({
@@ -130,8 +130,11 @@ const updateProductService = async (id, body, files = []) => {
   }
 
   if (files.length > 0) {
-    const baseUrl = process.env.BASE_URL || "";
-    body.images = files.map(f => `${baseUrl}/uploads/${f.filename}`);
+   const baseUrl = process.env.BASE_URL.startsWith("http")
+  ? process.env.BASE_URL
+  : `https://${process.env.BASE_URL}`;
+
+body.images = files.map(f => `${baseUrl}/uploads/${f.filename}`);
   }
 
   Object.assign(product, body);
