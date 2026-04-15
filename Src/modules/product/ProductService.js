@@ -42,6 +42,7 @@ const createProductService = async (body = {}, files = []) => {
   const category = await Category.findById(categoryId);
   if (!category) throw new Error("Invalid category");
 
+  console.log("ENV BASE_URL =", process.env.BASE_URL);
 const baseUrl = process.env.BASE_URL.startsWith("http")
   ? process.env.BASE_URL
   : `https://${process.env.BASE_URL}`;
