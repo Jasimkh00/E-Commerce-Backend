@@ -41,16 +41,18 @@ const createProductService = async (body = {}, files = []) => {
 
   const category = await Category.findById(categoryId);
   if (!category) throw new Error("Invalid category");
-const baseUrl = process.env.BASE_URL || "";
+  
+const baseUrl = process.env.BASE_URL || "https://munoapi.brainexworld.com";
 
 const safeBaseUrl =
-  baseUrl && baseUrl.startsWith("http")
+  baseUrl.startsWith("http")
     ? baseUrl
-    : `https://${baseUrl || "munoapi.brainexworld.com"}`;
+    : `https://${baseUrl}`;
 
 const images = files.length > 0
   ? files.map(f => `${safeBaseUrl}/uploads/${f.filename}`)
   : [];
+
   return await Product.create({
     title,
     description,
