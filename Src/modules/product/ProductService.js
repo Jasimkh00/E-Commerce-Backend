@@ -42,9 +42,6 @@ const createProductService = async (body = {}, files = []) => {
   const category = await Category.findById(categoryId);
   if (!category) throw new Error("Invalid category");
 
-  const exists = await Product.exists({ title, categoryId });
-  if (exists) throw new Error("Product already exists");
-
   const baseUrl = process.env.BASE_URL || "";
 
   const images = files.length > 0
@@ -167,16 +164,22 @@ const getNewArrivalsService = async () => {
 
 // Best Selling Products :
 const getBestSellingService = async () => {
-  return await Product.find({ isActive: true })
-    .sort("-totalSold")
+  return await Product.find({
+    isActive: true,
+    totalSold: { $gt: 0 } 
+  })
+    .sort({ totalSold: -1 })
     .limit(10)
     .lean();
 };
 
 // To Rated Products :
 const getTopRatedService = async () => {
-  return await Product.find({ isActive: true })
-    .sort("-averageRating")
+  return await Product.find({
+    isActive: true,
+    averageRating: { $gte: 3 } 
+  })
+    .sort({ averageRating: -1 })
     .limit(10)
     .lean();
 };
