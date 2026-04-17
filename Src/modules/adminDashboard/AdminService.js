@@ -35,7 +35,7 @@ const getAdminDashboardService = async () => {
         totalVariants += (p.variants?.length || 0);
     });
 
-    // ================= NON-CANCELLED ORDERS ONLY =================
+    // ================= ORDERS =================
     const validOrders = await Order.find({
         orderStatus: { $ne: "cancelled" }
     })
@@ -91,34 +91,35 @@ const getAdminDashboardService = async () => {
     const profit = totalRevenue - totalCost;
     const loss = profit < 0 ? Math.abs(profit) : 0;
 
-    // ================= PRODUCT WISE ORDERS =================
+    // ================= PRODUCT ANALYTICS (FIXED) =================
     const productMap = {};
 
     validOrders.forEach(order => {
         order.orderItems?.forEach(item => {
 
-            const product = item.productId;
-            if (!product) return;
+            const p = item.productId;
+            if (!p) return;
 
-            const id = product._id?.toString();
+            const id = p._id?.toString();
+            if (!id) return;
 
             if (!productMap[id]) {
                 productMap[id] = {
                     productId: id,
-                    title: product.title,
+                    title: p.title || "Unknown Product",
                     totalOrders: 0,
                     revenue: 0
                 };
             }
 
-            productMap[id].totalOrders += 1;
+            productMap[id].totalOrders += item.quantity || 1;
             productMap[id].revenue += (item.price || 0) * (item.quantity || 0);
         });
     });
 
     const productWiseOrders = Object.values(productMap);
 
-    // ================= FINAL RESPONSE (CLEAN ONLY) =================
+    // ================= FINAL RESPONSE =================
     return {
         users: {
             totalUsers,
