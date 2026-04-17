@@ -165,32 +165,50 @@ const updateProductStockService = async (id, body) => {
 
 // Get New Arrivals :
 const getNewArrivalsService = async () => {
-  return await Product.find({ isActive: true, isNewArrival: true })
-    .sort("-createdAt")
-    .limit(10)
-    .lean();
+  const products = await Product.find({
+    isActive: true,
+    isNewArrival: true
+  })
+    .sort({ createdAt: -1 })
+    .limit(10);
+
+  return products.map(p => {
+    const obj = p.toObject();
+    delete obj.totalSold;
+    return obj;
+  });
 };
 
-// Best Selling Products :
+// BEST SELLING
 const getBestSellingService = async () => {
-  return await Product.find({
-    isActive: true,
-    totalSold: { $gt: 0 } 
+
+  const products = await Product.find({
+    isActive: true
   })
     .sort({ totalSold: -1 })
-    .limit(10)
-    .lean();
+    .limit(10);
+
+  return products.map(p => {
+    const obj = p.toObject();
+    delete obj.totalSold;
+    return obj;
+  });
 };
 
-// To Rated Products :
+// TOP RATED
 const getTopRatedService = async () => {
-  return await Product.find({
-    isActive: true,
-    averageRating: { $gte: 3 } 
+
+  const products = await Product.find({
+    isActive: true
   })
     .sort({ averageRating: -1 })
-    .limit(10)
-    .lean();
+    .limit(10);
+
+  return products.map(p => {
+    const obj = p.toObject();
+    delete obj.totalSold;
+    return obj;
+  });
 };
 
 // Deactivate :

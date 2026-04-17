@@ -1,153 +1,165 @@
-// Require Models :
 const Product = require("../../../Src/modules/product/Model");
 const Order = require("../../../Src/modules/order/Model");
 const User = require("../../../Src/modules/auth/Model");
 
-// Logic For Admin Dashboard :
 const getAdminDashboardService = async () => {
 
-    //FOR  USERS :
+    // ================= USERS =================
     const totalUsers = await User.countDocuments();
 
     const newUsersThisMonth = await User.countDocuments({
         createdAt: {
-            $gte: new Date(new Date().setDate(1))
+            $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
         }
     });
 
-    //FOR PRODUCTS :
+    // ================= PRODUCTS =================
     const totalProducts = await Product.countDocuments();
-
-    const activeProducts = await Product.countDocuments({
-        isActive: true
-    });
-
-    const outOfStockProducts = await Product.countDocuments({
-        totalStock: 0
-    });
+    const activeProducts = await Product.countDocuments({ isActive: true });
 
     const lowStockProducts = await Product.countDocuments({
         totalStock: { $lte: 5, $gt: 0 }
     });
 
-    //FOR INVENTORY :
-    const products = await Product.find();
+    const outOfStockProducts = await Product.countDocuments({
+        totalStock: { $lte: 0 }
+    });
+
+    const products = await Product.find().select("totalStock variants");
 
     let totalStock = 0;
     let totalVariants = 0;
 
-    products.forEach(product => {
-        totalStock += product.totalStock;
-
-        product.variants.forEach(() => {
-            totalVariants++;
-        });
+    products.forEach(p => {
+        totalStock += p.totalStock || 0;
+        totalVariants += (p.variants?.length || 0);
     });
 
-    //FOR ORDERS :
-    const totalOrders = await Order.countDocuments();
+    // ================= NON-CANCELLED ORDERS ONLY =================
+    const validOrders = await Order.find({
+        orderStatus: { $ne: "cancelled" }
+    })
+        .select("totalPrice createdAt orderItems profitCost")
+        .lean();
 
-    const pendingOrders = await Order.countDocuments({
-        orderStatus: "pending"
-    });
+    const totalOrders = validOrders.length;
 
-    const deliveredOrders = await Order.countDocuments({
-        orderStatus: "delivered"
-    });
+    // ================= DATE SETUP =================
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
 
-    const cancelledOrders = await Order.countDocuments({
-        orderStatus: "cancelled"
-    });
+    const tomorrow = new Date(todayStart);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-    //FOR SALES :
-    const orders = await Order.find();
-
-    const totalRevenue = orders.reduce(
-        (acc, item) => acc + item.totalPrice,
-        0
-    );
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const todayOrders = await Order.find({
-        createdAt: { $gte: today }
-    });
-
-    const todaySales = todayOrders.reduce(
-        (acc, item) => acc + item.totalPrice,
-        0
-    );
-
-    const firstDayMonth = new Date(
+    const monthStart = new Date(
         new Date().getFullYear(),
         new Date().getMonth(),
         1
     );
 
-    const monthOrders = await Order.find({
-        createdAt: { $gte: firstDayMonth }
-    });
+    const todayOrders = validOrders.filter(o =>
+        new Date(o.createdAt) >= todayStart &&
+        new Date(o.createdAt) < tomorrow
+    );
 
-    const monthlySales = monthOrders.reduce(
-        (acc, item) => acc + item.totalPrice,
+    const monthlyOrders = validOrders.filter(o =>
+        new Date(o.createdAt) >= monthStart
+    );
+
+    // ================= SALES =================
+    const totalRevenue = validOrders.reduce(
+        (acc, o) => acc + (o.totalPrice || 0),
         0
     );
 
-    //FOR PERFORMANCE :
-    const bestSellingProducts = await Product
-        .find({ isActive: true })
-        .sort("-totalSold")
-        .limit(5)
-        .select("title totalSold images");
+    const todayRevenue = todayOrders.reduce(
+        (acc, o) => acc + (o.totalPrice || 0),
+        0
+    );
 
-    const topRatedProducts = await Product
-        .find({ isActive: true })
-        .sort("-averageRating")
-        .limit(5)
-        .select("title averageRating images");
+    const monthlyRevenue = monthlyOrders.reduce(
+        (acc, o) => acc + (o.totalPrice || 0),
+        0
+    );
 
-    const newArrivals = await Product
-        .find({ isActive: true, isNewArrival: true })
-        .sort("-createdAt")
-        .limit(5)
-        .select("title images createdAt");
+    // ================= PROFIT / LOSS =================
+    const totalCost = validOrders.reduce(
+        (acc, o) => acc + (o.profitCost || 0),
+        0
+    );
 
+    const profit = totalRevenue - totalCost;
+    const loss = profit < 0 ? Math.abs(profit) : 0;
+
+    // ================= PRODUCT WISE ORDERS =================
+    const productMap = {};
+
+    validOrders.forEach(order => {
+        order.orderItems?.forEach(item => {
+
+            const product = item.productId;
+            if (!product) return;
+
+            const id = product._id?.toString();
+
+            if (!productMap[id]) {
+                productMap[id] = {
+                    productId: id,
+                    title: product.title,
+                    totalOrders: 0,
+                    revenue: 0
+                };
+            }
+
+            productMap[id].totalOrders += 1;
+            productMap[id].revenue += (item.price || 0) * (item.quantity || 0);
+        });
+    });
+
+    const productWiseOrders = Object.values(productMap);
+
+    // ================= FINAL RESPONSE (CLEAN ONLY) =================
     return {
         users: {
             totalUsers,
             newUsersThisMonth
         },
-        orders: {
-            totalOrders,
-            pendingOrders,
-            deliveredOrders,
-            cancelledOrders
-        },
-        sales: {
-            totalRevenue,
-            todaySales,
-            monthlySales
-        },
+
         products: {
             totalProducts,
             activeProducts,
             lowStockProducts,
             outOfStockProducts
         },
+
         inventory: {
             totalStock,
             totalVariants
         },
-        performance: {
-            bestSellingProducts,
-            topRatedProducts,
-            newArrivals
+
+        orders: {
+            totalOrders,
+            todayOrders: todayOrders.length,
+            monthlyOrders: monthlyOrders.length
+        },
+
+        sales: {
+            totalRevenue,
+            todayRevenue,
+            monthlyRevenue
+        },
+
+        finance: {
+            profit,
+            loss
+        },
+
+        productAnalytics: {
+            productWiseOrders
         }
     };
 };
 
-// EXPORT
 module.exports = {
     getAdminDashboardService
 };
