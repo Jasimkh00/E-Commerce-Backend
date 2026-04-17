@@ -1,25 +1,25 @@
-// Require Admin Dashboard Service :
 const adminDashboardService = require("../../../Src/modules/adminDashboard/AdminService");
 
-// For Admin Dashboard :
 const getAdminDashboard = async (req, res) => {
     try {
+        console.log("🔥 DASHBOARD CONTROLLER HIT");
 
         const data = await adminDashboardService.getAdminDashboardService();
 
-        res.status(200).json({
+        console.log("🔥 RESPONSE DATA:", Object.keys(data));
+
+        return res.status(200).json({
             message: "Admin dashboard analytics",
             data
         });
 
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             message: error.message
         });
     }
 };
 
-// EXPORT
 module.exports = {
     getAdminDashboard
 };
